@@ -1,0 +1,50 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: my-configmap
+data:
+  main: |
+    kafka.broker=host.docker.internal:9092
+    input.topic=test
+    output.topic=output
+  sum.partitions: "0"
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: sum
+  labels:
+    app: executor
+spec:
+  containers:
+    - name: executor-pod
+      image: "ruohang/executor-sum:testv1.1"
+      imagePullPolicy: "Always"
+      volumeMounts:
+        - name: config-volume
+          mountPath: /etc/config
+        - name: uds-volume
+          mountPath: /tmp
+    - name: io-sidecar
+      image: "ruohang/iosidecar:testv1.1"
+      imagePullPolicy: "Always"
+      env:
+        - name: POD_NAME
+          value: "sum"
+      volumeMounts:
+        - name: config-volume
+          mountPath: /etc/config
+        - name: uds-volume
+          mountPath: /tmp
+    - name: state-sidecar
+      image: "ruohang/statesidecar:testv1.1"
+      imagePullPolicy: "Always"
+      volumeMounts:
+        - name: uds-volume
+          mountPath: /tmp
+  volumes:
+    - name: config-volume
+      configMap:
+        name: my-configmap
+    - name: uds-volume
+      emptyDir: { }

@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: example
+spec:
+  serviceName: "example"
+  replicas: 2
+  selector:
+    matchLabels:
+      app: example
+  template:
+    metadata:
+      labels:
+        app: example
+    spec:
+      containers:
+        - name: executor-pod
+          image: "ruohang/executor-word-count:testv1"
+          imagePullPolicy: "IfNotPresent"
+          volumeMounts:
+            - name: config-volume
+              mountPath: /etc/config
+        - name: input-sidecar
+          image: "ruohang/iosidecar:testv1"
+          imagePullPolicy: "IfNotPresent"
+          env:
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+          volumeMounts:
+            - name: config-volume
+              mountPath: /etc/config
+        - name: state-sidecar
+          image: "ruohang/statesidecar:testv1"
+          imagePullPolicy: "IfNotPresent"
+        - name: producer-sidecar
+          image: "ruohang/producersidecar:testv1"
+          imagePullPolicy: "IfNotPresent"
+          env:
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+          volumeMounts:
+            - name: config-volume
+              mountPath: /etc/config
+      volumes:
+        - name: config-volume
+          configMap:
+            name: my-configmap

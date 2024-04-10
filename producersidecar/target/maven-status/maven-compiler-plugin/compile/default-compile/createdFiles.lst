@@ -1,0 +1,5 @@
+server/ConfigMapReader.class
+server/SharedStatus.class
+server/KafkaIOManager.class
+server/SocketServer.class
+server/FileWatcher.class
